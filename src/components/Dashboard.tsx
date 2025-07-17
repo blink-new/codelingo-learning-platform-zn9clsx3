@@ -91,49 +91,40 @@ export default function Dashboard({ onStartLesson }: { onStartLesson: (courseId:
   }, [])
 
   const loadUserProgress = async (userId: string) => {
-    try {
-      const progress = await blink.db.userProgress.list({
-        where: { userId },
-        orderBy: { lastActive: 'desc' }
-      })
-      setUserProgress(progress)
-    } catch (error) {
-      console.error('Failed to load user progress:', error)
-      // Fallback to localStorage for demo purposes
-      const localProgress = localStorage.getItem(`userProgress_${userId}`)
-      if (localProgress) {
-        setUserProgress(JSON.parse(localProgress))
-      } else {
-        // Initialize with default progress for demo
-        const defaultProgress: UserProgress[] = [
-          {
-            id: 'demo-react',
-            userId,
-            language: 'react',
-            xp: 45,
-            streak: 3,
-            hearts: 5,
-            level: 2,
-            lessonsCompleted: 3,
-            totalLessons: 45,
-            lastActive: new Date().toISOString()
-          },
-          {
-            id: 'demo-sql',
-            userId,
-            language: 'sql',
-            xp: 25,
-            streak: 1,
-            hearts: 4,
-            level: 1,
-            lessonsCompleted: 2,
-            totalLessons: 35,
-            lastActive: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-          }
-        ]
-        setUserProgress(defaultProgress)
-        localStorage.setItem(`userProgress_${userId}`, JSON.stringify(defaultProgress))
-      }
+    // Using localStorage for demo mode since database is not available
+    const localProgress = localStorage.getItem(`userProgress_${userId}`)
+    if (localProgress) {
+      setUserProgress(JSON.parse(localProgress))
+    } else {
+      // Initialize with default progress for demo
+      const defaultProgress: UserProgress[] = [
+        {
+          id: 'demo-react',
+          userId,
+          language: 'react',
+          xp: 45,
+          streak: 3,
+          hearts: 5,
+          level: 2,
+          lessonsCompleted: 3,
+          totalLessons: 45,
+          lastActive: new Date().toISOString()
+        },
+        {
+          id: 'demo-sql',
+          userId,
+          language: 'sql',
+          xp: 25,
+          streak: 1,
+          hearts: 4,
+          level: 1,
+          lessonsCompleted: 2,
+          totalLessons: 35,
+          lastActive: new Date(Date.now() - 86400000).toISOString() // 1 day ago
+        }
+      ]
+      setUserProgress(defaultProgress)
+      localStorage.setItem(`userProgress_${userId}`, JSON.stringify(defaultProgress))
     }
   }
 
@@ -255,7 +246,7 @@ export default function Dashboard({ onStartLesson }: { onStartLesson: (courseId:
               <Info className="w-5 h-5 flex-shrink-0" />
               <div>
                 <p className="font-medium">Demo Mode Active</p>
-                <p className="text-sm opacity-90">Your progress is saved locally. Database will be connected soon for persistent storage.</p>
+                <p className="text-sm opacity-90">Your progress is saved locally in your browser. Try completing lessons to see your XP and progress update!</p>
               </div>
             </div>
           </CardContent>

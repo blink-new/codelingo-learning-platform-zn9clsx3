@@ -196,70 +196,40 @@ export default function LessonInterface({ courseId, onBack }: LessonInterfacePro
   const saveProgress = async (correct: boolean) => {
     if (!user) return
 
-    try {
-      // Update user progress in database
-      const existingProgress = await blink.db.userProgress.list({
-        where: { userId: user.id, language: courseId }
+    // Using localStorage for demo mode since database is not available
+    const localProgressKey = `userProgress_${user.id}`
+    const existingLocalProgress = localStorage.getItem(localProgressKey)
+    const progressArray = existingLocalProgress ? JSON.parse(existingLocalProgress) : []
+    
+    const existingIndex = progressArray.findIndex((p: any) => p.language === courseId)
+    
+    if (existingIndex >= 0) {
+      // Update existing progress
+      const progress = progressArray[existingIndex]
+      progressArray[existingIndex] = {
+        ...progress,
+        xp: progress.xp + (correct ? currentLesson.xpReward : 0),
+        hearts: correct ? progress.hearts : Math.max(0, progress.hearts - 1),
+        lessonsCompleted: correct ? progress.lessonsCompleted + 1 : progress.lessonsCompleted,
+        lastActive: new Date().toISOString()
+      }
+    } else {
+      // Create new progress entry
+      progressArray.push({
+        id: `demo-${courseId}`,
+        userId: user.id,
+        language: courseId,
+        xp: correct ? currentLesson.xpReward : 0,
+        streak: 1,
+        hearts: correct ? 5 : 4,
+        level: 1,
+        lessonsCompleted: correct ? 1 : 0,
+        totalLessons: lessons.length,
+        lastActive: new Date().toISOString()
       })
-
-      if (existingProgress.length > 0) {
-        const progress = existingProgress[0]
-        await blink.db.userProgress.update(progress.id, {
-          xp: progress.xp + (correct ? currentLesson.xpReward : 0),
-          hearts: correct ? progress.hearts : Math.max(0, progress.hearts - 1),
-          lessonsCompleted: correct ? progress.lessonsCompleted + 1 : progress.lessonsCompleted,
-          lastActive: new Date().toISOString()
-        })
-      } else {
-        await blink.db.userProgress.create({
-          userId: user.id,
-          language: courseId,
-          xp: correct ? currentLesson.xpReward : 0,
-          streak: 1,
-          hearts: correct ? 5 : 4,
-          level: 1,
-          lessonsCompleted: correct ? 1 : 0,
-          totalLessons: lessons.length,
-          lastActive: new Date().toISOString()
-        })
-      }
-    } catch (error) {
-      console.error('Failed to save progress:', error)
-      // Fallback to localStorage
-      const localProgressKey = `userProgress_${user.id}`
-      const existingLocalProgress = localStorage.getItem(localProgressKey)
-      const progressArray = existingLocalProgress ? JSON.parse(existingLocalProgress) : []
-      
-      const existingIndex = progressArray.findIndex((p: any) => p.language === courseId)
-      
-      if (existingIndex >= 0) {
-        // Update existing progress
-        const progress = progressArray[existingIndex]
-        progressArray[existingIndex] = {
-          ...progress,
-          xp: progress.xp + (correct ? currentLesson.xpReward : 0),
-          hearts: correct ? progress.hearts : Math.max(0, progress.hearts - 1),
-          lessonsCompleted: correct ? progress.lessonsCompleted + 1 : progress.lessonsCompleted,
-          lastActive: new Date().toISOString()
-        }
-      } else {
-        // Create new progress entry
-        progressArray.push({
-          id: `demo-${courseId}`,
-          userId: user.id,
-          language: courseId,
-          xp: correct ? currentLesson.xpReward : 0,
-          streak: 1,
-          hearts: correct ? 5 : 4,
-          level: 1,
-          lessonsCompleted: correct ? 1 : 0,
-          totalLessons: lessons.length,
-          lastActive: new Date().toISOString()
-        })
-      }
-      
-      localStorage.setItem(localProgressKey, JSON.stringify(progressArray))
     }
+    
+    localStorage.setItem(localProgressKey, JSON.stringify(progressArray))
   }
 
   const handleNext = () => {
