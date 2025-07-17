@@ -14,7 +14,8 @@ import {
   Star,
   Zap,
   Target,
-  Calendar
+  Calendar,
+  Info
 } from 'lucide-react'
 import { blink } from '../lib/blink'
 
@@ -98,6 +99,41 @@ export default function Dashboard({ onStartLesson }: { onStartLesson: (courseId:
       setUserProgress(progress)
     } catch (error) {
       console.error('Failed to load user progress:', error)
+      // Fallback to localStorage for demo purposes
+      const localProgress = localStorage.getItem(`userProgress_${userId}`)
+      if (localProgress) {
+        setUserProgress(JSON.parse(localProgress))
+      } else {
+        // Initialize with default progress for demo
+        const defaultProgress: UserProgress[] = [
+          {
+            id: 'demo-react',
+            userId,
+            language: 'react',
+            xp: 45,
+            streak: 3,
+            hearts: 5,
+            level: 2,
+            lessonsCompleted: 3,
+            totalLessons: 45,
+            lastActive: new Date().toISOString()
+          },
+          {
+            id: 'demo-sql',
+            userId,
+            language: 'sql',
+            xp: 25,
+            streak: 1,
+            hearts: 4,
+            level: 1,
+            lessonsCompleted: 2,
+            totalLessons: 35,
+            lastActive: new Date(Date.now() - 86400000).toISOString() // 1 day ago
+          }
+        ]
+        setUserProgress(defaultProgress)
+        localStorage.setItem(`userProgress_${userId}`, JSON.stringify(defaultProgress))
+      }
     }
   }
 
@@ -211,6 +247,19 @@ export default function Dashboard({ onStartLesson }: { onStartLesson: (courseId:
             Continue your coding journey and level up your skills
           </p>
         </div>
+
+        {/* Demo Mode Notice */}
+        <Card className="mb-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <Info className="w-5 h-5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Demo Mode Active</p>
+                <p className="text-sm opacity-90">Your progress is saved locally. Database will be connected soon for persistent storage.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Daily Challenge Banner */}
         <Card className="mb-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
